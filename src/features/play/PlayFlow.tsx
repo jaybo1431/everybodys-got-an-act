@@ -7,15 +7,13 @@ import { SceneSelectScreen } from './SceneSelectScreen';
 import { SceneIntroScreen } from './SceneIntroScreen';
 import { ScriptScreen } from './ScriptScreen';
 import { CameraPermissionScreen } from './CameraPermissionScreen';
-import { CountdownScreen } from './CountdownScreen';
-import { RecordingScreen } from './RecordingScreen';
-import { ReviewScreen } from './ReviewScreen';
+import { ActingScreen } from './ActingScreen';
 import { ScoreScreen } from './ScoreScreen';
 import { PassPhoneScreen } from './PassPhoneScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { PlaybackScreen } from './PlaybackScreen';
 
-const CAMERA_ACTIVE_PHASES: GamePhase[] = ['camera-permission', 'countdown', 'recording', 'review'];
+const CAMERA_ACTIVE_PHASES: GamePhase[] = ['camera-permission', 'acting'];
 
 /**
  * Maps the current GamePhase to a screen. This is the only file that
@@ -47,12 +45,8 @@ export function PlayFlow({ onExit }: { onExit: () => void }) {
       return <ScriptScreen />;
     case 'camera-permission':
       return <CameraPermissionScreen camera={camera} />;
-    case 'countdown':
-      return <CountdownScreen camera={camera} />;
-    case 'recording':
-      return <RecordingScreen camera={camera} />;
-    case 'review':
-      return <ReviewScreen />;
+    case 'acting':
+      return <ActingScreen camera={camera} />;
     case 'score':
       return <ScoreScreen />;
     case 'pass-phone':

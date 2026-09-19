@@ -14,7 +14,7 @@ export function CameraPermissionScreen({ camera }: Props) {
 
   useEffect(() => {
     if (camera.permissionState === 'granted') {
-      goToPhase('countdown');
+      goToPhase('acting');
     }
   }, [camera.permissionState, goToPhase]);
 

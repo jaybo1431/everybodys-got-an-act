@@ -2,11 +2,17 @@ import type { Scene, Genre, DialogueLine } from './types';
 
 const character = (id: string, name: string) => ({ id, name });
 
+// Every line gets a predictable audio asset id (`audio-${lineId}`) —
+// audioCatalog.ts defines the matching AudioAsset for each one. Every
+// line needs its own audio, not just "the non-default" character's,
+// because which character is the partner depends on which one the
+// participant picks to play (see dialogue.ts / turnEngine.ts).
 const dialogueLine = (id: string, characterId: string, text: string, order: number): DialogueLine => ({
   id,
   characterId,
   text,
   order,
+  audioAssetId: `audio-${id}`,
 });
 
 /**

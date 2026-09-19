@@ -78,6 +78,22 @@ export interface MediaAsset {
   blob: Blob;
 }
 
+/**
+ * A pre-recorded partner line, resolved via AudioRepository. Unlike
+ * MediaAsset (a user-generated Blob persisted to IndexedDB),
+ * AudioAsset describes an app-bundled, read-only static file — `src`
+ * is a URL the browser can play directly, not something stored per
+ * session. The domain layer never knows or cares where that file
+ * physically lives; only AudioRepository (src/data/audioRepository.ts)
+ * resolves an id to one of these.
+ */
+export interface AudioAsset {
+  id: string;
+  src: string;
+  characterId: string;
+  durationMs?: number;
+}
+
 /** Fixed for the MVP: Expression, Delivery, Timing, Confidence. */
 export interface ScoreBreakdown {
   label: string;
@@ -95,13 +111,28 @@ export interface Score {
   method: 'demo' | 'ai';
 }
 
+/**
+ * One player-performed line within a Take. Each player dialogue line
+ * gets its own recording — Take does not hold one combined video.
+ * Combining segments into a single rendered video is explicitly
+ * future work, not part of this phase.
+ */
+export interface TakeSegment {
+  id: string;
+  lineId: string;
+  characterId: string;
+  mediaAssetId: string;
+  durationMs?: number;
+  order: number;
+}
+
 export interface Take {
   id: string;
   sceneId: string;
   participantId: string;
-  mediaAssetId: string;
   takeNumber: number;
   createdAt: number;
+  segments: TakeSegment[];
   score?: Score;
 }
 
@@ -116,9 +147,7 @@ export type GamePhase =
   | 'scene-intro'
   | 'script'
   | 'camera-permission'
-  | 'countdown'
-  | 'recording'
-  | 'review'
+  | 'acting'
   | 'score'
   | 'pass-phone'
   | 'results'

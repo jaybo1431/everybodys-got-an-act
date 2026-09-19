@@ -1,7 +1,8 @@
 import { createContext, useContext, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
 import { gameSessionReducer, createSession } from '../domain/gameSession';
-import type { GameSession, GamePhase, Genre, Participant, Take, Scene } from '../domain/types';
+import type { DialogueLine, GameSession, GamePhase, Genre, Participant, Take, TakeSegment, Scene } from '../domain/types';
 import { getSceneById } from '../domain/sceneCatalog';
+import { createTakeSegment } from '../domain/takeSegments';
 import { mediaRepository } from '../data/mediaRepository';
 import { takeRepository } from '../data/takeRepository';
 import { DemoScoringService } from '../domain/scoring/DemoScoringService';
@@ -15,7 +16,6 @@ interface PlaySessionContextValue {
   scene: Scene | undefined;
   currentParticipant: Participant | undefined;
   takes: Take[];
-  pendingBlob: Blob | null;
   isSaving: boolean;
   lastAcceptedTake: Take | undefined;
   canGoBack: boolean;
@@ -23,9 +23,10 @@ interface PlaySessionContextValue {
   selectScene: (sceneId: string) => void;
   goToPhase: (phase: GamePhase) => void;
   goBack: () => void;
-  submitRecordedBlob: (blob: Blob) => void;
-  retake: () => void;
-  acceptTake: () => Promise<void>;
+  /** Persists one player-recorded line as its own segment of the in-progress take. */
+  acceptLineSegment: (line: DialogueLine, blob: Blob) => Promise<void>;
+  /** Scores and saves the in-progress take once every line has been performed. */
+  finalizeTake: () => Promise<void>;
   startNextActor: (name: string) => void;
   finishSession: () => void;
   viewPlayback: () => void;
@@ -37,7 +38,7 @@ const PlaySessionContext = createContext<PlaySessionContextValue | null>(null);
 
 export function PlaySessionProvider({ children }: { children: ReactNode }) {
   const [session, dispatch] = useReducer(gameSessionReducer, undefined, createSession);
-  const [pendingBlob, setPendingBlob] = useState<Blob | null>(null);
+  const [segments, setSegments] = useState<TakeSegment[]>([]);
   const [takes, setTakes] = useState<Take[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const historyRef = useRef<GamePhase[]>([]);
@@ -71,6 +72,7 @@ export function PlaySessionProvider({ children }: { children: ReactNode }) {
     // First participant of the session defaults to "You" — every
     // participant from the second onward is named during the
     // pass-the-phone handoff instead (see startNextActor).
+    setSegments([]);
     const participant: Participant = { id: crypto.randomUUID(), name: 'You', joinedAt: Date.now() };
     dispatch({ type: 'BEGIN_PARTICIPANT_TURN', participant });
   };
@@ -88,39 +90,37 @@ export function PlaySessionProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_PHASE', phase: previous });
   };
 
-  const submitRecordedBlob = (blob: Blob) => {
-    setPendingBlob(blob);
-    dispatch({ type: 'SET_PHASE', phase: 'review' });
+  // Persists exactly one player line's recording. Called by
+  // ActingScreen every time a line is accepted — never for a whole
+  // scene at once, since each player dialogue line is its own take.
+  const acceptLineSegment = async (line: DialogueLine, blob: Blob) => {
+    const asset = await mediaRepository.save(blob);
+    const segment = createTakeSegment(line, asset.id);
+    setSegments((prev) => [...prev, segment]);
   };
 
-  const retake = () => {
-    setPendingBlob(null);
-    dispatch({ type: 'SET_PHASE', phase: 'countdown' });
-  };
-
-  // The only function in the app that turns a raw recording into
-  // persisted domain data: saves the MediaAsset, scores the take,
-  // saves the Take, then advances the session.
-  const acceptTake = async () => {
-    if (!pendingBlob || !session.sceneId || !session.currentParticipantId) return;
+  // Called once the turn engine reaches END_OF_SCENE: assembles the
+  // accumulated segments into a Take, scores it, persists it, and
+  // advances the session.
+  const finalizeTake = async () => {
+    if (!session.sceneId || !session.currentParticipantId) return;
     setIsSaving(true);
     try {
-      const asset = await mediaRepository.save(pendingBlob);
       const takeNumber = takes.filter((t) => t.participantId === session.currentParticipantId).length + 1;
       const baseTake: Take = {
         id: crypto.randomUUID(),
         sceneId: session.sceneId,
         participantId: session.currentParticipantId,
-        mediaAssetId: asset.id,
         takeNumber,
         createdAt: Date.now(),
+        segments,
       };
       const score = await scoringService.scoreTake(baseTake, { takeNumber });
       const scoredTake: Take = { ...baseTake, score };
 
       await takeRepository.save(scoredTake);
       setTakes((prev) => [...prev, scoredTake]);
-      setPendingBlob(null);
+      setSegments([]);
       historyRef.current = [];
       setCanGoBack(false);
       dispatch({ type: 'ADD_TAKE', takeId: scoredTake.id });
@@ -135,10 +135,12 @@ export function PlaySessionProvider({ children }: { children: ReactNode }) {
       name: name.trim() || `Player ${session.participants.length + 1}`,
       joinedAt: Date.now(),
     };
-    // Clear back-history so the new performer can't navigate back into
-    // the previous participant's score screen.
+    // Clear back-history and any leftover segments so the new
+    // performer can't navigate back into, or accidentally inherit,
+    // the previous participant's recording.
     historyRef.current = [];
     setCanGoBack(false);
+    setSegments([]);
     dispatch({ type: 'BEGIN_PARTICIPANT_TURN', participant });
   };
 
@@ -154,7 +156,7 @@ export function PlaySessionProvider({ children }: { children: ReactNode }) {
 
   const startNewScene = () => {
     setTakes([]);
-    setPendingBlob(null);
+    setSegments([]);
     historyRef.current = [];
     setCanGoBack(false);
     dispatch({ type: 'RESET_FOR_NEW_SCENE' });
@@ -162,7 +164,7 @@ export function PlaySessionProvider({ children }: { children: ReactNode }) {
 
   const resetSession = () => {
     setTakes([]);
-    setPendingBlob(null);
+    setSegments([]);
     historyRef.current = [];
     setCanGoBack(false);
     dispatch({ type: 'RESET_SESSION' });
@@ -173,7 +175,6 @@ export function PlaySessionProvider({ children }: { children: ReactNode }) {
     scene,
     currentParticipant,
     takes,
-    pendingBlob,
     isSaving,
     lastAcceptedTake,
     canGoBack,
@@ -181,9 +182,8 @@ export function PlaySessionProvider({ children }: { children: ReactNode }) {
     selectScene,
     goToPhase,
     goBack,
-    submitRecordedBlob,
-    retake,
-    acceptTake,
+    acceptLineSegment,
+    finalizeTake,
     startNextActor,
     finishSession,
     viewPlayback,
