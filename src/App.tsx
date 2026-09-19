@@ -21,7 +21,7 @@ export default function App() {
   // coming back starts a brand new GameSession.
   return (
     <PlaySessionProvider key="play-session">
-      <PlayFlow />
+      <PlayFlow onExit={() => setView('home')} />
     </PlaySessionProvider>
   );
 }

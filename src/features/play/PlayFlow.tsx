@@ -4,12 +4,13 @@ import { useCameraRecorder } from '../../media/useCameraRecorder';
 import type { GamePhase } from '../../domain/types';
 import { GenreSelectScreen } from './GenreSelectScreen';
 import { SceneSelectScreen } from './SceneSelectScreen';
-import { ScriptPresentScreen } from './ScriptPresentScreen';
+import { SceneIntroScreen } from './SceneIntroScreen';
+import { ScriptScreen } from './ScriptScreen';
 import { CameraPermissionScreen } from './CameraPermissionScreen';
 import { CountdownScreen } from './CountdownScreen';
 import { RecordingScreen } from './RecordingScreen';
 import { ReviewScreen } from './ReviewScreen';
-import { ParticipantNameScreen } from './ParticipantNameScreen';
+import { ScoreScreen } from './ScoreScreen';
 import { PassPhoneScreen } from './PassPhoneScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { PlaybackScreen } from './PlaybackScreen';
@@ -21,7 +22,7 @@ const CAMERA_ACTIVE_PHASES: GamePhase[] = ['camera-permission', 'countdown', 're
  * knows the full phase sequence — every screen only knows how to
  * render itself and which actions to call next.
  */
-export function PlayFlow() {
+export function PlayFlow({ onExit }: { onExit: () => void }) {
   const { session } = usePlaySession();
   const camera = useCameraRecorder();
 
@@ -37,11 +38,13 @@ export function PlayFlow() {
 
   switch (session.phase) {
     case 'genre-select':
-      return <GenreSelectScreen />;
+      return <GenreSelectScreen onExit={onExit} />;
     case 'scene-select':
       return <SceneSelectScreen />;
-    case 'script-present':
-      return <ScriptPresentScreen />;
+    case 'scene-intro':
+      return <SceneIntroScreen />;
+    case 'script':
+      return <ScriptScreen />;
     case 'camera-permission':
       return <CameraPermissionScreen camera={camera} />;
     case 'countdown':
@@ -50,8 +53,8 @@ export function PlayFlow() {
       return <RecordingScreen camera={camera} />;
     case 'review':
       return <ReviewScreen />;
-    case 'participant-name':
-      return <ParticipantNameScreen />;
+    case 'score':
+      return <ScoreScreen />;
     case 'pass-phone':
       return <PassPhoneScreen />;
     case 'results':

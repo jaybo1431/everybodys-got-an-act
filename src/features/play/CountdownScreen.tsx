@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePlaySession } from '../../state/PlaySessionContext';
 import type { useCameraRecorder } from '../../media/useCameraRecorder';
-import { ScreenShell } from '../../components/ScreenShell';
+import { Countdown } from '../../components/Countdown';
 
 interface Props {
   camera: ReturnType<typeof useCameraRecorder>;
@@ -30,9 +30,12 @@ export function CountdownScreen({ camera }: Props) {
   }, [count]);
 
   return (
-    <ScreenShell className="items-center justify-center relative p-0">
+    <div className="screen-height w-full relative flex items-center justify-center bg-bg">
       <video ref={camera.videoRef} muted playsInline className="absolute inset-0 w-full h-full object-cover" />
-      <div className="relative z-10 text-8xl font-black drop-shadow-lg">{count > 0 ? count : 'Go!'}</div>
-    </ScreenShell>
+      <div className="absolute inset-0 bg-black/35" />
+      <div className="relative z-10">
+        <Countdown count={count} />
+      </div>
+    </div>
   );
 }

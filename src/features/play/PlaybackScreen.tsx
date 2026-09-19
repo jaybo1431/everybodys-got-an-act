@@ -1,64 +1,69 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { usePlaySession } from '../../state/PlaySessionContext';
 import { mediaRepository } from '../../data/mediaRepository';
+import type { Take } from '../../domain/types';
 import { ScreenShell } from '../../components/ScreenShell';
 import { Button } from '../../components/Button';
+import { BackButton } from '../../components/BackButton';
+import { VideoPlayer } from '../../components/VideoPlayer';
 
-export function PlaybackScreen() {
-  const { session, takes, goToPhase, startNewScene } = usePlaySession();
-  const [urls, setUrls] = useState<Record<string, string>>({});
+function TakeCard({ take, participantName, sceneTitle }: { take: Take; participantName: string; sceneTitle: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    const objectUrls: string[] = [];
-
-    (async () => {
-      const entries = await Promise.all(
-        takes.map(async (take) => {
-          const asset = await mediaRepository.get(take.mediaAssetId);
-          if (!asset) return null;
-          const url = URL.createObjectURL(asset.blob);
-          objectUrls.push(url);
-          return [take.id, url] as const;
-        }),
-      );
-      if (!cancelled) {
-        setUrls(Object.fromEntries(entries.filter((entry): entry is [string, string] => Boolean(entry))));
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      objectUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [takes]);
+  const handlePlay = async () => {
+    if (url || loading) return;
+    setLoading(true);
+    const asset = await mediaRepository.get(take.mediaAssetId);
+    if (asset) setUrl(URL.createObjectURL(asset.blob));
+    setLoading(false);
+  };
 
   return (
-    <ScreenShell>
-      <h2 className="text-2xl font-bold mt-8">All takes</h2>
-      <div className="flex-1 w-full max-w-sm overflow-y-auto my-6 space-y-6">
+    <div className="bg-surface border border-hairline/10 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="font-semibold text-ink">{participantName}</div>
+          <div className="text-ink-dim text-xs mt-0.5">{sceneTitle}</div>
+        </div>
+        <div className="text-xl font-display font-extrabold text-shimmer-gold">{take.score?.overall}</div>
+      </div>
+      {url ? (
+        <VideoPlayer src={url} />
+      ) : (
+        <Button variant="surface" onClick={handlePlay} disabled={loading} className="w-full">
+          {loading ? 'Loading…' : 'Play'}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+export function PlaybackScreen() {
+  const { session, scene, takes, goBack, startNewScene } = usePlaySession();
+
+  return (
+    <ScreenShell className="items-stretch">
+      <div className="w-full">
+        <BackButton onClick={goBack} label="Results" />
+        <h2 className="font-display font-extrabold text-2xl mt-4">All Takes</h2>
+      </div>
+      <div className="flex-1 w-full overflow-y-auto my-5 space-y-4">
         {takes.map((take) => {
           const participant = session.participants.find((p) => p.id === take.participantId);
-          const url = urls[take.id];
           return (
-            <div key={take.id}>
-              <div className="flex justify-between text-sm text-white/60 mb-1">
-                <span>{participant?.name}</span>
-                <span>{take.score?.overall}</span>
-              </div>
-              {url && <video src={url} controls playsInline className="w-full rounded-xl bg-black" />}
-            </div>
+            <TakeCard
+              key={take.id}
+              take={take}
+              participantName={participant?.name ?? 'Unknown'}
+              sceneTitle={scene?.title ?? ''}
+            />
           );
         })}
       </div>
-      <div className="flex gap-4 w-full max-w-sm">
-        <Button variant="secondary" onClick={() => goToPhase('results')} className="flex-1">
-          Back
-        </Button>
-        <Button onClick={startNewScene} className="flex-1">
-          New scene
-        </Button>
-      </div>
+      <Button onClick={startNewScene} className="w-full max-w-sm">
+        New Scene
+      </Button>
     </ScreenShell>
   );
 }

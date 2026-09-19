@@ -1,0 +1,97 @@
+/**
+ * Design tokens — the locked visual identity, extracted from
+ * design/approved-app-mockup.png. Every color, radius, and shadow
+ * used in the app should trace back to a token here so the look can
+ * be refined globally later without hunting through components.
+ *
+ * Colors are stored as "R G B" triplets (no commas) so Tailwind can
+ * apply opacity modifiers via rgb(var(--x) / <alpha-value>).
+ */
+
+:root {
+  /* Surfaces */
+  --color-bg: 9 9 10; /* near-black canvas */
+  --color-surface: 20 20 22; /* dark charcoal panel */
+  --color-surface-2: 30 30 33; /* raised charcoal (cards on cards) */
+
+  /* Text */
+  --color-text: 245 241 232; /* warm white */
+  --color-text-dim: 168 164 156; /* muted warm grey */
+
+  /* Metallics */
+  --color-gold: 201 164 74; /* base metallic gold */
+  --color-gold-light: 234 205 130; /* gold highlight */
+  --color-gold-dark: 150 118 46; /* gold shadow */
+  --color-silver: 186 190 196; /* base metallic silver */
+  --color-silver-light: 224 226 230; /* silver highlight */
+
+  /* Structure */
+  --color-border: 255 255 255; /* used at low opacity for hairlines */
+
+  /* Radii */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-elevated: 0 24px 60px -24px rgb(0 0 0 / 0.7);
+  --shadow-gold-glow: 0 10px 30px -8px rgb(var(--color-gold) / 0.45);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.shimmer-gold {
+  background-image: linear-gradient(
+    110deg,
+    rgb(var(--color-gold-dark)) 0%,
+    rgb(var(--color-gold-light)) 30%,
+    rgb(var(--color-gold)) 50%,
+    rgb(var(--color-gold-light)) 70%,
+    rgb(var(--color-gold-dark)) 100%
+  );
+  background-size: 220% 100%;
+  animation: shimmer 6s ease-in-out infinite;
+}
+
+.text-shimmer-gold {
+  background-image: linear-gradient(
+    110deg,
+    rgb(var(--color-gold-dark)) 0%,
+    rgb(var(--color-gold-light)) 30%,
+    rgb(var(--color-gold)) 50%,
+    rgb(var(--color-gold-light)) 70%,
+    rgb(var(--color-gold-dark)) 100%
+  );
+  background-size: 220% 100%;
+  animation: shimmer 7s ease-in-out infinite;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.text-shimmer-silver {
+  background-image: linear-gradient(
+    110deg,
+    rgb(var(--color-silver)) 0%,
+    rgb(var(--color-silver-light)) 40%,
+    rgb(var(--color-silver)) 60%,
+    rgb(var(--color-silver-light)) 100%
+  );
+  background-size: 220% 100%;
+  animation: shimmer 7s ease-in-out infinite;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}

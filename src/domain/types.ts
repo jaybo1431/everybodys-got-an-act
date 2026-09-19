@@ -5,7 +5,7 @@
  * depends on nothing.
  */
 
-export type Genre = 'comedy' | 'drama' | 'action' | 'horror' | 'romance';
+export type Genre = 'comedy' | 'drama' | 'horror' | 'action' | 'romance';
 
 export interface Character {
   id: string;
@@ -16,6 +16,7 @@ export interface Character {
 export interface ScriptLine {
   characterId: string;
   line: string;
+  direction?: string;
 }
 
 export interface Script {
@@ -25,7 +26,7 @@ export interface Script {
 
 /**
  * A Scene is structured data, not a page. Adding new scenes (tonight:
- * a handful of predefined ones; later: generated, licensed, difficulty
+ * three predefined originals; later: generated, licensed, difficulty
  * tiers) never requires touching a UI component.
  */
 export interface Scene {
@@ -59,15 +60,16 @@ export interface MediaAsset {
   blob: Blob;
 }
 
+/** Fixed for the MVP: Expression, Delivery, Timing, Confidence. */
 export interface ScoreBreakdown {
   label: string;
-  value: number;
+  value: number; // 0-100
 }
 
 export interface Score {
   id: string;
   takeId: string;
-  overall: number;
+  overall: number; // 0-100
   breakdown: ScoreBreakdown[];
   tagline: string;
   scoredAt: number;
@@ -93,12 +95,13 @@ export interface Take {
 export type GamePhase =
   | 'genre-select'
   | 'scene-select'
-  | 'script-present'
+  | 'scene-intro'
+  | 'script'
   | 'camera-permission'
   | 'countdown'
   | 'recording'
   | 'review'
-  | 'participant-name'
+  | 'score'
   | 'pass-phone'
   | 'results'
   | 'playback';

@@ -2,12 +2,17 @@ import { Button } from '../../components/Button';
 
 export function SplashScreen({ onEnter }: { onEnter: () => void }) {
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center gap-8 bg-black text-white text-center px-6">
+    <div className="screen-height w-full flex flex-col items-center justify-center gap-10 bg-bg text-ink text-center px-6 safe-top safe-bottom">
       <div>
-        <h1 className="text-4xl font-black tracking-tight">Everybody&apos;s Got An Act</h1>
-        <p className="text-white/60 mt-2">Pass the phone. Steal the scene.</p>
+        <h1 className="font-display leading-[0.95]">
+          <span className="block text-4xl italic font-semibold text-shimmer-gold">Everyone&apos;s</span>
+          <span className="block text-5xl font-extrabold tracking-tight mt-1">GOT AN ACT</span>
+        </h1>
+        <p className="text-ink-dim mt-5 text-sm tracking-wide">Same scene. Different people. Your take.</p>
       </div>
-      <Button onClick={onEnter}>Enter</Button>
+      <Button onClick={onEnter} className="w-full max-w-xs">
+        Get Started
+      </Button>
     </div>
   );
 }

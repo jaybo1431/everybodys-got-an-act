@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePlaySession } from '../../state/PlaySessionContext';
 import type { useCameraRecorder } from '../../media/useCameraRecorder';
-import { Button } from '../../components/Button';
+import { CameraRecorder } from '../../components/CameraRecorder';
 
 interface Props {
   camera: ReturnType<typeof useCameraRecorder>;
@@ -9,6 +9,12 @@ interface Props {
 
 export function RecordingScreen({ camera }: Props) {
   const { submitRecordedBlob } = usePlaySession();
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!camera.isRecording && camera.recordedBlob) {
@@ -17,16 +23,11 @@ export function RecordingScreen({ camera }: Props) {
   }, [camera.isRecording, camera.recordedBlob, submitRecordedBlob]);
 
   return (
-    <div className="min-h-screen w-full relative bg-black">
-      <video ref={camera.videoRef} muted playsInline className="absolute inset-0 w-full h-full object-cover" />
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-red-500/90 px-4 py-1 rounded-full text-sm font-bold flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-white animate-pulse" /> Recording
-      </div>
-      <div className="absolute bottom-10 left-0 right-0 flex justify-center">
-        <Button variant="danger" onClick={() => camera.stopRecording()}>
-          Stop
-        </Button>
-      </div>
-    </div>
+    <CameraRecorder
+      videoRef={camera.videoRef}
+      isRecording={camera.isRecording}
+      elapsedSeconds={elapsedSeconds}
+      onStop={() => camera.stopRecording()}
+    />
   );
 }

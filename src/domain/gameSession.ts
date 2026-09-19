@@ -22,7 +22,6 @@ export type GameAction =
   | { type: 'SET_PHASE'; phase: GamePhase }
   | { type: 'BEGIN_PARTICIPANT_TURN'; participant: Participant }
   | { type: 'ADD_TAKE'; takeId: string }
-  | { type: 'RENAME_CURRENT_PARTICIPANT'; name: string }
   | { type: 'RESET_FOR_NEW_SCENE' }
   | { type: 'RESET_SESSION' };
 
@@ -32,7 +31,7 @@ export function gameSessionReducer(state: GameSession, action: GameAction): Game
       return { ...state, selectedGenre: action.genre, phase: 'scene-select' };
 
     case 'SELECT_SCENE':
-      return { ...state, sceneId: action.sceneId, phase: 'script-present' };
+      return { ...state, sceneId: action.sceneId, phase: 'scene-intro' };
 
     case 'SET_PHASE':
       return { ...state, phase: action.phase };
@@ -42,20 +41,11 @@ export function gameSessionReducer(state: GameSession, action: GameAction): Game
         ...state,
         participants: [...state.participants, action.participant],
         currentParticipantId: action.participant.id,
-        phase: 'script-present',
+        phase: 'scene-intro',
       };
 
     case 'ADD_TAKE':
-      return { ...state, takeIds: [...state.takeIds, action.takeId], phase: 'participant-name' };
-
-    case 'RENAME_CURRENT_PARTICIPANT':
-      return {
-        ...state,
-        participants: state.participants.map((p) =>
-          p.id === state.currentParticipantId ? { ...p, name: action.name } : p,
-        ),
-        phase: 'pass-phone',
-      };
+      return { ...state, takeIds: [...state.takeIds, action.takeId], phase: 'score' };
 
     case 'RESET_FOR_NEW_SCENE':
       return {

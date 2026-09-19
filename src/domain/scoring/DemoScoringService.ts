@@ -1,56 +1,37 @@
 import type { Take, Score } from '../types';
 import type { ScoringService, ScoringContext } from './ScoringService';
 
-const CATEGORIES = [
-  'Commitment',
-  'Comedic Timing',
-  'Line Accuracy',
-  'Drama Factor',
-  'Chaos Energy',
-  'Stage Presence',
-  'Improv Bonus',
-  'Vibes',
-];
+/** Fixed category order for the MVP score card. */
+const CATEGORIES = ['Expression', 'Delivery', 'Timing', 'Confidence'];
 
 const TAGLINES = [
-  'Oscar-worthy chaos',
-  'Needs more jazz hands',
-  'Certified scene stealer',
-  'Bold choices, no regrets',
-  'Main character energy',
-  'Somebody call their agent',
-  'A little wooden, a lot iconic',
-  'The judges are confused (in a good way)',
+  'Great emotion and strong delivery — nice control in the quiet moments.',
+  'Bold choices early on. Push the ending even further next time.',
+  'Confident throughout. A few more beats of stillness would land harder.',
+  'Strong commitment — dial the energy up through the middle.',
+  'Clean timing. Let the pauses do more of the work.',
+  'Big swing, and it paid off. Keep that energy.',
+  'Solid take — the reactions sold it more than the lines did.',
+  'Great instincts. Trust the silence a little more.',
 ];
 
-function pickRandom<T>(items: T[], count: number): T[] {
-  const pool = [...items];
-  const picked: T[] = [];
-  while (picked.length < count && pool.length > 0) {
-    const index = Math.floor(Math.random() * pool.length);
-    picked.push(pool.splice(index, 1)[0]);
-  }
-  return picked;
-}
-
 /**
- * Playful, purely local scoring for the MVP. Deliberately dumb:
- * random breakdown categories, random-ish values. Swap this class
- * out for an AIScoringService later — the ScoringService interface
- * doesn't change.
+ * Playful, purely local scoring for the MVP — not a real performance
+ * analysis. Swap this class out for an AIScoringService later; the
+ * ScoringService interface it implements doesn't change.
  */
 export class DemoScoringService implements ScoringService {
   async scoreTake(take: Take, _context: ScoringContext): Promise<Score> {
-    const breakdown = pickRandom(CATEGORIES, 3).map((label) => ({
+    const breakdown = CATEGORIES.map((label) => ({
       label,
-      value: Math.round((Math.random() * 6 + 4) * 10) / 10,
+      value: Math.round(Math.random() * 30 + 65), // 65-95
     }));
-    const average = breakdown.reduce((sum, b) => sum + b.value, 0) / breakdown.length;
+    const overall = Math.round(breakdown.reduce((sum, b) => sum + b.value, 0) / breakdown.length);
 
     return {
       id: crypto.randomUUID(),
       takeId: take.id,
-      overall: Math.min(100, Math.round(average * 10)),
+      overall,
       breakdown,
       tagline: TAGLINES[Math.floor(Math.random() * TAGLINES.length)],
       scoredAt: Date.now(),
