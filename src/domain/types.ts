@@ -13,21 +13,39 @@ export interface Character {
   description?: string;
 }
 
-export interface ScriptLine {
-  characterId: string;
-  line: string;
-  direction?: string;
-}
-
-export interface Script {
+/**
+ * One line of dialogue belonging to one character. `order` is the
+ * authoritative sequencing field — helpers sort by it rather than
+ * trusting array position, so a scene's dialogueLines can be stored,
+ * generated, or merged in any order and still play back correctly.
+ *
+ * `audioAssetId` and the pause fields are forward-looking: nothing in
+ * this phase populates or plays them. They exist so a future
+ * pre-recorded "partner" audio track can be attached to a line
+ * without another domain model change.
+ */
+export interface DialogueLine {
   id: string;
-  lines: ScriptLine[];
+  characterId: string;
+  text: string;
+  order: number;
+  pauseBeforeMs?: number;
+  pauseAfterMs?: number;
+  audioAssetId?: string;
 }
 
 /**
  * A Scene is structured data, not a page. Adding new scenes (tonight:
  * three predefined originals; later: generated, licensed, difficulty
  * tiers) never requires touching a UI component.
+ *
+ * A scene's dialogue is a flat, ordered sequence of lines addressed
+ * to arbitrary character IDs — nothing in the model assumes exactly
+ * two characters or hard-codes which one is "the player". Which
+ * character a given participant is performing lives on the
+ * GameSession (see `playerCharacterId` below), not on the Scene
+ * itself, so the same scene works no matter which character is
+ * chosen.
  */
 export interface Scene {
   id: string;
@@ -36,7 +54,7 @@ export interface Scene {
   premise: string;
   durationSeconds: number;
   characters: Character[];
-  script: Script;
+  dialogueLines: DialogueLine[];
   instructions: string;
 }
 
@@ -109,12 +127,19 @@ export type GamePhase =
 /**
  * A GameSession does not assume a fixed number of participants —
  * it just tracks whoever has joined so far and whose turn it is.
+ *
+ * `playerCharacterId` records which of the current scene's
+ * characters the participant is performing. It defaults to the
+ * scene's first character when a scene is selected, but the model
+ * itself places no constraint on which character ID goes here — any
+ * scene works with any of its characters as the player.
  */
 export interface GameSession {
   id: string;
   createdAt: number;
   selectedGenre?: Genre;
   sceneId?: string;
+  playerCharacterId?: string;
   participants: Participant[];
   takeIds: string[];
   currentParticipantId?: string;

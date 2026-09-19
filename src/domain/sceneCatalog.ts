@@ -1,90 +1,83 @@
-import type { Scene, Genre } from './types';
+import type { Scene, Genre, DialogueLine } from './types';
 
 const character = (id: string, name: string) => ({ id, name });
 
+const dialogueLine = (id: string, characterId: string, text: string, order: number): DialogueLine => ({
+  id,
+  characterId,
+  text,
+  order,
+});
+
 /**
- * Three original scenes for tonight's MVP. This is the only file
- * that needs to grow when we add more scenes, generated scripts,
- * difficulty tiers, or licensed content later — nothing in the UI
- * layer hard-codes scene content.
+ * Three original two-character scenes for tonight's MVP. Each scene
+ * names its own characters (no "Actor A"/"Actor B" anywhere) — the
+ * first character listed is the default player role, but nothing in
+ * the model or the helpers in dialogue.ts requires that; any
+ * character ID can be passed in as the player.
+ *
+ * This is the only file that needs to grow when we add more scenes,
+ * generated scripts, difficulty tiers, or licensed content later —
+ * nothing in the UI layer hard-codes scene content.
  */
 export const SCENES: Scene[] = [
   {
     id: 'comedy-the-wrong-message',
     title: 'The Wrong Message',
     genre: 'comedy',
-    premise: 'You accidentally sent your boss a message that was meant for your best friend. They just called you into the room.',
-    durationSeconds: 45,
-    characters: [character('boss', 'The Boss'), character('you', 'You')],
-    instructions: 'Play both roles. Switch your posture and voice between characters — the flatter the Boss, the funnier it lands.',
-    script: {
-      id: 'script-comedy-the-wrong-message',
-      lines: [
-        { characterId: 'boss', line: 'My office. Now.' },
-        { characterId: 'you', line: 'Is this about the report?', direction: 'panicked' },
-        { characterId: 'boss', line: "It's about the message you sent me at 2:47pm." },
-        { characterId: 'you', line: '...which message?' },
-        {
-          characterId: 'boss',
-          line: '"This meeting could have been an email. This man could have been anyone else. I want to scream into a pillow." Attached: a screaming goat.',
-          direction: 'reading flatly off a phone',
-        },
-        { characterId: 'you', line: '...that was for Casey.' },
-        { characterId: 'boss', line: 'I am not Casey.' },
-        { characterId: 'you', line: 'No. No, you are extremely not Casey.' },
-        { characterId: 'boss', line: 'Anything you\'d like to add?' },
-        { characterId: 'you', line: '...strong choice on the goat, though?', direction: 'after a long pause' },
-      ],
-    },
+    premise: 'Jamie accidentally sent their boss, Morgan, a message that was meant for a friend. Morgan just called Jamie into the room.',
+    durationSeconds: 35,
+    characters: [character('jamie', 'Jamie'), character('morgan', 'Morgan')],
+    instructions: "Play it dead serious — the flatter Morgan stays, the funnier Jamie's spiral lands.",
+    dialogueLines: [
+      dialogueLine('comedy-l1', 'morgan', 'Jamie. My office. Now.', 1),
+      dialogueLine('comedy-l2', 'jamie', 'Is this about the report?', 2),
+      dialogueLine('comedy-l3', 'morgan', "It's about the message you sent me at 2:47 today.", 3),
+      dialogueLine('comedy-l4', 'jamie', '...which message?', 4),
+      dialogueLine('comedy-l5', 'morgan', 'The one about screaming into a pillow. With a goat attached.', 5),
+      dialogueLine('comedy-l6', 'jamie', '...that was meant for Casey.', 6),
+      dialogueLine('comedy-l7', 'morgan', 'I am not Casey.', 7),
+      dialogueLine('comedy-l8', 'jamie', 'No. You are extremely not Casey.', 8),
+      dialogueLine('comedy-l9', 'morgan', "Anything you'd like to add?", 9),
+      dialogueLine('comedy-l10', 'jamie', '...strong choice on the goat, though?', 10),
+    ],
   },
   {
     id: 'drama-the-confession',
     title: 'The Confession',
     genre: 'drama',
-    premise: 'You discover your best friend has lied to you about something important. You confront them and demand the truth.',
-    durationSeconds: 50,
-    characters: [character('you', 'You'), character('friend', 'Alex')],
+    premise: 'Alex has just found out Jamie lied about something important. Alex wants the truth, out loud, right now.',
+    durationSeconds: 35,
+    characters: [character('alex', 'Alex'), character('jamie', 'Jamie')],
     instructions: 'Take your time. Let the pauses breathe — the silence between lines carries as much as the words.',
-    script: {
-      id: 'script-drama-the-confession',
-      lines: [
-        { characterId: 'you', line: 'How long have you known?' },
-        { characterId: 'friend', line: 'Known what?' },
-        { characterId: 'you', line: "Don't. Not tonight. How long, Alex?" },
-        { characterId: 'friend', line: '...since March.', direction: 'quiet' },
-        { characterId: 'you', line: 'Six months. You let me stand there for six months.' },
-        { characterId: 'friend', line: "I didn't know how to tell you." },
-        { characterId: 'you', line: "You didn't know how? Or you didn't want to?" },
-        { characterId: 'friend', line: 'Both. Maybe both.' },
-        { characterId: 'you', line: 'I trusted you with everything.' },
-        { characterId: 'friend', line: 'I know.' },
-        { characterId: 'you', line: 'Look at me and tell me why.' },
-        { characterId: 'friend', line: '...because I was scared of losing you. And I lost you anyway.', direction: 'after a long beat' },
-      ],
-    },
+    dialogueLines: [
+      dialogueLine('drama-l1', 'alex', "You said you'd never come back.", 1),
+      dialogueLine('drama-l2', 'jamie', 'I had to.', 2),
+      dialogueLine('drama-l3', 'alex', 'You could have called.', 3),
+      dialogueLine('drama-l4', 'jamie', 'And said what?', 4),
+      dialogueLine('drama-l5', 'alex', 'The truth, maybe.', 5),
+      dialogueLine('drama-l6', 'jamie', 'Would you have believed me?', 6),
+      dialogueLine('drama-l7', 'alex', "I don't know anymore.", 7),
+      dialogueLine('drama-l8', 'jamie', "That's the first honest thing either of us has said tonight.", 8),
+    ],
   },
   {
     id: 'horror-someones-there',
     title: "Someone's There",
     genre: 'horror',
-    premise: "You're home alone late at night. You hear a noise from another room. You know you locked the door.",
-    durationSeconds: 45,
-    characters: [character('you', 'You'), character('unknown', 'Unknown Voice')],
+    premise: "Riley is home alone, late, on the phone. Riley definitely locked the door. Something in the house disagrees.",
+    durationSeconds: 30,
+    characters: [character('riley', 'Riley'), character('unknown', 'Unknown Voice')],
     instructions: 'Whisper more than you speak. The stillness before each line is scarier than the line itself.',
-    script: {
-      id: 'script-horror-someones-there',
-      lines: [
-        { characterId: 'you', line: "I'm probably being paranoid. I definitely locked it though.", direction: 'whispering into the phone' },
-        { characterId: 'you', line: 'There. Did you hear that? That thump.' },
-        { characterId: 'you', line: "It's probably just the pipes. Old house, y'know.", direction: 'unconvinced' },
-        { characterId: 'you', line: '...hello?' },
-        { characterId: 'unknown', line: "You didn't lock it.", direction: 'calm, from the other room' },
-        { characterId: 'you', line: '...what?', direction: 'frozen' },
-        { characterId: 'unknown', line: "You didn't lock it." },
-        { characterId: 'you', line: "I'm hanging up. I'm calling you right back.", direction: 'barely a whisper' },
-        { characterId: 'you', line: "...who's there?", direction: 'to the dark hallway' },
-      ],
-    },
+    dialogueLines: [
+      dialogueLine('horror-l1', 'riley', "I'm probably being paranoid. I definitely locked it, though.", 1),
+      dialogueLine('horror-l2', 'riley', 'Did you hear that? That thump.', 2),
+      dialogueLine('horror-l3', 'unknown', "You didn't lock it.", 3),
+      dialogueLine('horror-l4', 'riley', '...what?', 4),
+      dialogueLine('horror-l5', 'unknown', "You didn't lock it.", 5),
+      dialogueLine('horror-l6', 'riley', "I'm hanging up. I'm calling you right back.", 6),
+      dialogueLine('horror-l7', 'riley', "...who's there?", 7),
+    ],
   },
 ];
 

@@ -62,7 +62,12 @@ export function PlaySessionProvider({ children }: { children: ReactNode }) {
 
   const selectScene = (sceneId: string) => {
     pushHistory(session.phase);
-    dispatch({ type: 'SELECT_SCENE', sceneId });
+    // Default the player to the scene's first listed character. The
+    // model supports any character being the player (see dialogue.ts)
+    // — this is just today's default until a role picker exists.
+    const chosenScene = getSceneById(sceneId);
+    const playerCharacterId = chosenScene?.characters[0]?.id ?? '';
+    dispatch({ type: 'SELECT_SCENE', sceneId, playerCharacterId });
     // First participant of the session defaults to "You" — every
     // participant from the second onward is named during the
     // pass-the-phone handoff instead (see startNextActor).

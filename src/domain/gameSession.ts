@@ -18,7 +18,7 @@ export function createSession(): GameSession {
 
 export type GameAction =
   | { type: 'SELECT_GENRE'; genre: Genre }
-  | { type: 'SELECT_SCENE'; sceneId: string }
+  | { type: 'SELECT_SCENE'; sceneId: string; playerCharacterId: string }
   | { type: 'SET_PHASE'; phase: GamePhase }
   | { type: 'BEGIN_PARTICIPANT_TURN'; participant: Participant }
   | { type: 'ADD_TAKE'; takeId: string }
@@ -31,7 +31,12 @@ export function gameSessionReducer(state: GameSession, action: GameAction): Game
       return { ...state, selectedGenre: action.genre, phase: 'scene-select' };
 
     case 'SELECT_SCENE':
-      return { ...state, sceneId: action.sceneId, phase: 'scene-intro' };
+      return {
+        ...state,
+        sceneId: action.sceneId,
+        playerCharacterId: action.playerCharacterId,
+        phase: 'scene-intro',
+      };
 
     case 'SET_PHASE':
       return { ...state, phase: action.phase };
@@ -51,6 +56,7 @@ export function gameSessionReducer(state: GameSession, action: GameAction): Game
       return {
         ...state,
         sceneId: undefined,
+        playerCharacterId: undefined,
         selectedGenre: undefined,
         participants: [],
         takeIds: [],
