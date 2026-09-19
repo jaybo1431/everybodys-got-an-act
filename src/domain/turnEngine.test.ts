@@ -141,6 +141,13 @@ describe('turn engine', () => {
 
 describe('turn engine against the real scene catalog', () => {
   SCENES.forEach((scene) => {
+    it(`"${scene.title}" — has a hook and every character has a description, for the granny-proof scene/character pickers`, () => {
+      expect(scene.hook, `"${scene.title}" needs a hook for SceneCard`).toBeTruthy();
+      for (const character of scene.characters) {
+        expect(character.description, `"${scene.title}"'s "${character.name}" needs a description for CharacterCard`).toBeTruthy();
+      }
+    });
+
     it(`"${scene.title}" — every line has an audioAssetId, walking the whole scene never throws, and it ends correctly`, () => {
       for (const line of scene.dialogueLines) {
         expect(line.audioAssetId).toBeTruthy();

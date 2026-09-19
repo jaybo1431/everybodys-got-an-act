@@ -4,6 +4,8 @@ import { useCameraRecorder } from '../../media/useCameraRecorder';
 import type { GamePhase } from '../../domain/types';
 import { GenreSelectScreen } from './GenreSelectScreen';
 import { SceneSelectScreen } from './SceneSelectScreen';
+import { CharacterSelectScreen } from './CharacterSelectScreen';
+import { DemoScreen } from './DemoScreen';
 import { SceneIntroScreen } from './SceneIntroScreen';
 import { ScriptScreen } from './ScriptScreen';
 import { CameraPermissionScreen } from './CameraPermissionScreen';
@@ -38,7 +40,14 @@ export function PlayFlow({ onExit }: { onExit: () => void }) {
     case 'genre-select':
       return <GenreSelectScreen onExit={onExit} />;
     case 'scene-select':
-      return <SceneSelectScreen />;
+      // The one-player entry point — a fresh session starts here
+      // (see gameSession.createSession), so this screen also needs a
+      // way out to Home, exactly like GenreSelectScreen above.
+      return <SceneSelectScreen onExit={onExit} />;
+    case 'character-select':
+      return <CharacterSelectScreen />;
+    case 'demo':
+      return <DemoScreen />;
     case 'scene-intro':
       return <SceneIntroScreen />;
     case 'script':

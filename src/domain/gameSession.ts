@@ -12,15 +12,22 @@ export function createSession(): GameSession {
     createdAt: Date.now(),
     participants: [],
     takeIds: [],
-    phase: 'genre-select',
+    entryMode: 'solo',
+    // The one-player MVP is the default entry point: straight to
+    // "choose a scene", no genre step. The group flow still starts
+    // itself at 'genre-select' explicitly (see GenreSelectScreen's
+    // own entry in PlayFlow) — that phase is preserved, just not the
+    // default for a freshly created session.
+    phase: 'scene-select',
   };
 }
 
 export type GameAction =
   | { type: 'SELECT_GENRE'; genre: Genre }
-  | { type: 'SELECT_SCENE'; sceneId: string; playerCharacterId: string }
+  | { type: 'SELECT_SCENE'; sceneId: string }
+  | { type: 'SELECT_CHARACTER'; characterId: string }
   | { type: 'SET_PHASE'; phase: GamePhase }
-  | { type: 'BEGIN_PARTICIPANT_TURN'; participant: Participant }
+  | { type: 'BEGIN_PARTICIPANT_TURN'; participant: Participant; phase?: GamePhase }
   | { type: 'ADD_TAKE'; takeId: string }
   | { type: 'RESET_FOR_NEW_SCENE' }
   | { type: 'RESET_SESSION' };
@@ -28,15 +35,18 @@ export type GameAction =
 export function gameSessionReducer(state: GameSession, action: GameAction): GameSession {
   switch (action.type) {
     case 'SELECT_GENRE':
-      return { ...state, selectedGenre: action.genre, phase: 'scene-select' };
+      // The only place entryMode ever becomes 'group' — genre
+      // selection only exists in the pass-the-phone flow.
+      return { ...state, entryMode: 'group', selectedGenre: action.genre, phase: 'scene-select' };
 
     case 'SELECT_SCENE':
-      return {
-        ...state,
-        sceneId: action.sceneId,
-        playerCharacterId: action.playerCharacterId,
-        phase: 'scene-intro',
-      };
+      // Character is chosen next, on its own screen ("Who Are You?")
+      // — see SELECT_CHARACTER below. This action no longer defaults
+      // or assumes a playerCharacterId.
+      return { ...state, sceneId: action.sceneId, phase: 'character-select' };
+
+    case 'SELECT_CHARACTER':
+      return { ...state, playerCharacterId: action.characterId };
 
     case 'SET_PHASE':
       return { ...state, phase: action.phase };
@@ -46,7 +56,11 @@ export function gameSessionReducer(state: GameSession, action: GameAction): Game
         ...state,
         participants: [...state.participants, action.participant],
         currentParticipantId: action.participant.id,
-        phase: 'scene-intro',
+        // Defaults to 'scene-intro' — the pass-the-phone group flow's
+        // existing, unchanged behavior for every actor after the
+        // first. The one-player flow explicitly passes 'demo' instead
+        // (see PlaySessionContext.selectCharacter).
+        phase: action.phase ?? 'scene-intro',
       };
 
     case 'ADD_TAKE':
@@ -61,7 +75,7 @@ export function gameSessionReducer(state: GameSession, action: GameAction): Game
         participants: [],
         takeIds: [],
         currentParticipantId: undefined,
-        phase: 'genre-select',
+        phase: 'scene-select',
       };
 
     case 'RESET_SESSION':

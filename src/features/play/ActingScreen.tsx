@@ -14,6 +14,7 @@ import { SceneProgress } from '../../components/SceneProgress';
 type Stage =
   | 'partner'
   | 'partner-error'
+  | 'ready'
   | 'countdown'
   | 'recording'
   | 'review'
@@ -64,8 +65,10 @@ export function ActingScreen({ camera }: Props) {
     }
 
     if (currentTurn.kind === 'PLAYER_LINE') {
-      setCountdownCount(3);
-      setStage('countdown');
+      // Wait for an explicit "Start" tap rather than auto-starting the
+      // countdown — the player should never wonder whether recording
+      // is about to begin on its own.
+      setStage('ready');
       return;
     }
 
@@ -149,6 +152,11 @@ export function ActingScreen({ camera }: Props) {
 
   if (!scene || !session.playerCharacterId || !turn) return null;
 
+  const handleStartLine = () => {
+    setCountdownCount(3);
+    setStage('countdown');
+  };
+
   const handleRetakeLine = () => {
     setReviewBlob(null);
     camera.resetRecording();
@@ -180,7 +188,7 @@ export function ActingScreen({ camera }: Props) {
           <div className="text-[11px] tracking-[0.2em] uppercase text-gold-light/80 font-semibold">
             {partnerName ?? 'Partner'}
           </div>
-          <div className="font-display font-extrabold text-3xl mt-2">
+          <div className="font-display font-extrabold text-3xl mt-2 uppercase">
             {stage === 'partner-error' ? "Couldn't Play" : 'Listen'}
           </div>
         </div>
@@ -190,6 +198,22 @@ export function ActingScreen({ camera }: Props) {
             <Button onClick={() => setTurnIndex((i) => i + 1)}>Continue</Button>
           </>
         )}
+      </ScreenShell>
+    );
+  }
+
+  if (stage === 'ready') {
+    return (
+      <ScreenShell className="items-center justify-center text-center gap-6">
+        <SceneProgress total={totalLines} current={turnIndex} />
+        <div className="font-display font-extrabold text-3xl uppercase">Your Turn</div>
+        <div>
+          <div className="text-[11px] tracking-[0.2em] uppercase text-gold-light/80 font-semibold">Your Line</div>
+          <p className="font-display text-xl font-semibold mt-2 max-w-xs">&ldquo;{turn.line?.text}&rdquo;</p>
+        </div>
+        <Button onClick={handleStartLine} className="w-full max-w-xs">
+          Start
+        </Button>
       </ScreenShell>
     );
   }
@@ -220,7 +244,7 @@ export function ActingScreen({ camera }: Props) {
         isRecording={camera.isRecording}
         elapsedSeconds={elapsedSeconds}
         onStop={() => camera.stopRecording()}
-        stopLabel="Finish Line"
+        stopLabel="I'M DONE"
       >
         <div className="absolute top-16 left-0 right-0 flex flex-col items-center gap-3 px-6 safe-top">
           <SceneProgress total={totalLines} current={turnIndex} />
@@ -261,6 +285,15 @@ export function ActingScreen({ camera }: Props) {
     );
   }
 
-  // 'finishing' — brief, effect-driven transition to the Score screen.
-  return null;
+  // 'finishing' — a brief, satisfying beat while the score is
+  // computed and saved, then the existing effect above (triggered by
+  // this same stage) transitions to the Score screen automatically.
+  return (
+    <ScreenShell className="items-center justify-center text-center gap-4">
+      <div className="text-5xl" aria-hidden="true">
+        🎭
+      </div>
+      <div className="font-display font-extrabold text-3xl uppercase">Scene Complete</div>
+    </ScreenShell>
+  );
 }

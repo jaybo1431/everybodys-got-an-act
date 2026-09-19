@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function CameraPermissionScreen({ camera }: Props) {
-  const { goToPhase, goBack } = usePlaySession();
+  const { goToPhase, goBack, canGoBack } = usePlaySession();
 
   useEffect(() => {
     if (camera.permissionState === 'granted') {
@@ -21,7 +21,10 @@ export function CameraPermissionScreen({ camera }: Props) {
   return (
     <ScreenShell className="items-stretch">
       <div className="w-full">
-        <BackButton onClick={goBack} label="Script" />
+        {/* No back history right after "Play Again" (it deliberately
+            clears history — see PlaySessionContext.playAgain) — the
+            button only appears when there's somewhere to actually go. */}
+        {canGoBack && <BackButton onClick={goBack} label="Back" />}
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">

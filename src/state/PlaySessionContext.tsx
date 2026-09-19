@@ -21,12 +21,16 @@ interface PlaySessionContextValue {
   canGoBack: boolean;
   selectGenre: (genre: Genre) => void;
   selectScene: (sceneId: string) => void;
+  /** One-player flow only: picks which scene character the player performs, then starts the interactive demo. */
+  selectCharacter: (characterId: string) => void;
   goToPhase: (phase: GamePhase) => void;
   goBack: () => void;
   /** Persists one player-recorded line as its own segment of the in-progress take. */
   acceptLineSegment: (line: DialogueLine, blob: Blob) => Promise<void>;
   /** Scores and saves the in-progress take once every line has been performed. */
   finalizeTake: () => Promise<void>;
+  /** One-player flow: replays the SAME scene/character as a fresh take, right after seeing a score. */
+  playAgain: () => void;
   startNextActor: (name: string) => void;
   finishSession: () => void;
   viewPlayback: () => void;
@@ -63,18 +67,27 @@ export function PlaySessionProvider({ children }: { children: ReactNode }) {
 
   const selectScene = (sceneId: string) => {
     pushHistory(session.phase);
-    // Default the player to the scene's first listed character. The
-    // model supports any character being the player (see dialogue.ts)
-    // — this is just today's default until a role picker exists.
-    const chosenScene = getSceneById(sceneId);
-    const playerCharacterId = chosenScene?.characters[0]?.id ?? '';
-    dispatch({ type: 'SELECT_SCENE', sceneId, playerCharacterId });
-    // First participant of the session defaults to "You" — every
-    // participant from the second onward is named during the
-    // pass-the-phone handoff instead (see startNextActor).
+    dispatch({ type: 'SELECT_SCENE', sceneId });
+  };
+
+  // Character is chosen on its own screen, right after the scene —
+  // shared by BOTH flows, since SceneSelectScreen/selectScene() are
+  // the same code path either way. This is also where the FIRST
+  // participant is created — mirrors exactly what selectScene() used
+  // to do in one step, before a character picker existed.
+  //
+  // Which screen comes next differs by flow — `session.entryMode`
+  // (set once, at the true entry point; see types.ts's own doc
+  // comment) says which: one-player goes to the interactive demo,
+  // the group flow goes to its existing scene-intro/script screens,
+  // completely unchanged.
+  const selectCharacter = (characterId: string) => {
+    pushHistory(session.phase);
+    dispatch({ type: 'SELECT_CHARACTER', characterId });
     setSegments([]);
     const participant: Participant = { id: crypto.randomUUID(), name: 'You', joinedAt: Date.now() };
-    dispatch({ type: 'BEGIN_PARTICIPANT_TURN', participant });
+    const nextPhase: GamePhase = session.entryMode === 'group' ? 'scene-intro' : 'demo';
+    dispatch({ type: 'BEGIN_PARTICIPANT_TURN', participant, phase: nextPhase });
   };
 
   const goToPhase = (phase: GamePhase) => {
@@ -129,6 +142,20 @@ export function PlaySessionProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // One-player flow: same scene, same character, a brand new take.
+  // Goes back through 'camera-permission' rather than straight to
+  // 'acting' because PlayFlow releases the camera (and resets its
+  // permission state) the moment we leave the camera-active phases —
+  // see PlayFlow.tsx's CAMERA_ACTIVE_PHASES effect. The browser
+  // already granted the permission, so this is a fast pass-through in
+  // practice, not a repeated native prompt.
+  const playAgain = () => {
+    historyRef.current = [];
+    setCanGoBack(false);
+    setSegments([]);
+    dispatch({ type: 'SET_PHASE', phase: 'camera-permission' });
+  };
+
   const startNextActor = (name: string) => {
     const participant: Participant = {
       id: crypto.randomUUID(),
@@ -180,10 +207,12 @@ export function PlaySessionProvider({ children }: { children: ReactNode }) {
     canGoBack,
     selectGenre,
     selectScene,
+    selectCharacter,
     goToPhase,
     goBack,
     acceptLineSegment,
     finalizeTake,
+    playAgain,
     startNextActor,
     finishSession,
     viewPlayback,

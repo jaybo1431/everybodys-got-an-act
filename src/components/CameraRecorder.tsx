@@ -5,7 +5,7 @@ interface CameraRecorderProps {
   isRecording: boolean;
   elapsedSeconds: number;
   onStop: () => void;
-  /** Button label — defaults to "Stop". ActingScreen passes "Finish Line" for the turn-based flow. */
+  /** Button label — defaults to "Stop". ActingScreen passes "I'M DONE" for the turn-based flow. */
   stopLabel?: string;
   /** Optional overlay content (e.g. the current line's text) rendered above the live preview. */
   children?: ReactNode;

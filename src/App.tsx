@@ -14,11 +14,11 @@ export default function App() {
   }
 
   if (view === 'home') {
-    return <HomeScreen onPlayTogether={() => setView('play')} />;
+    return <HomeScreen onPlay={() => setView('play')} />;
   }
 
-  // Fresh key each time we enter "Play Together" so leaving and
-  // coming back starts a brand new GameSession.
+  // Fresh key each time we enter Play so leaving and coming back
+  // starts a brand new GameSession.
   return (
     <PlaySessionProvider key="play-session">
       <PlayFlow onExit={() => setView('home')} />

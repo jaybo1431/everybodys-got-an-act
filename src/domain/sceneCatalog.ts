@@ -1,6 +1,6 @@
 import type { Scene, Genre, DialogueLine } from './types';
 
-const character = (id: string, name: string) => ({ id, name });
+const character = (id: string, name: string, description: string) => ({ id, name, description });
 
 // Every line gets a predictable audio asset id (`audio-${lineId}`) —
 // audioCatalog.ts defines the matching AudioAsset for each one. Every
@@ -32,8 +32,12 @@ export const SCENES: Scene[] = [
     title: 'The Wrong Message',
     genre: 'comedy',
     premise: 'Jamie accidentally sent their boss, Morgan, a message that was meant for a friend. Morgan just called Jamie into the room.',
+    hook: 'One text. Very wrong person.',
     durationSeconds: 35,
-    characters: [character('jamie', 'Jamie'), character('morgan', 'Morgan')],
+    characters: [
+      character('jamie', 'Jamie', 'The one who sent the message.'),
+      character('morgan', 'Morgan', 'The one who saw it.'),
+    ],
     instructions: "Play it dead serious — the flatter Morgan stays, the funnier Jamie's spiral lands.",
     dialogueLines: [
       dialogueLine('comedy-l1', 'morgan', 'Jamie. My office. Now.', 1),
@@ -53,8 +57,12 @@ export const SCENES: Scene[] = [
     title: 'The Confession',
     genre: 'drama',
     premise: 'Alex has just found out Jamie lied about something important. Alex wants the truth, out loud, right now.',
+    hook: 'One truth. No more excuses.',
     durationSeconds: 35,
-    characters: [character('alex', 'Alex'), character('jamie', 'Jamie')],
+    characters: [
+      character('alex', 'Alex', 'The one who wants answers.'),
+      character('jamie', 'Jamie', "The one who's been lying."),
+    ],
     instructions: 'Take your time. Let the pauses breathe — the silence between lines carries as much as the words.',
     dialogueLines: [
       dialogueLine('drama-l1', 'alex', "You said you'd never come back.", 1),
@@ -72,8 +80,12 @@ export const SCENES: Scene[] = [
     title: "Someone's There",
     genre: 'horror',
     premise: "Riley is home alone, late, on the phone. Riley definitely locked the door. Something in the house disagrees.",
+    hook: "You're home alone. Or you were.",
     durationSeconds: 30,
-    characters: [character('riley', 'Riley'), character('unknown', 'Unknown Voice')],
+    characters: [
+      character('riley', 'Riley', 'Alone in the house. Maybe.'),
+      character('unknown', 'Unknown Voice', "Not Riley's imagination."),
+    ],
     instructions: 'Whisper more than you speak. The stillness before each line is scarier than the line itself.',
     dialogueLines: [
       dialogueLine('horror-l1', 'riley', "I'm probably being paranoid. I definitely locked it, though.", 1),
@@ -89,6 +101,16 @@ export const SCENES: Scene[] = [
 
 export function getGenres(): Genre[] {
   return Array.from(new Set(SCENES.map((s) => s.genre)));
+}
+
+/**
+ * Every scene, unfiltered — what the one-player scene picker shows
+ * (genre is a badge on the card, not a separate screen; see
+ * SceneSelectScreen.tsx). The genre-first path (getGenres/
+ * getScenesByGenre) is preserved for the pass-the-phone group flow.
+ */
+export function getAllScenes(): Scene[] {
+  return SCENES;
 }
 
 export function getScenesByGenre(genre: Genre): Scene[] {

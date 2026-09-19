@@ -52,6 +52,14 @@ export interface Scene {
   title: string;
   genre: Genre;
   premise: string;
+  /**
+   * A very short, punchy one-liner for the scene-picker card (e.g.
+   * "One text. Very wrong person.") — distinct from `premise`, which
+   * is the longer setup line used by the (currently unrouted, but
+   * preserved) SceneIntroScreen. Optional only so older fixture data
+   * doesn't break; every real scene in sceneCatalog.ts sets one.
+   */
+  hook?: string;
   durationSeconds: number;
   characters: Character[];
   dialogueLines: DialogueLine[];
@@ -137,13 +145,25 @@ export interface Take {
 }
 
 /**
- * Every screen in the "Play Together" flow, in the order a session
- * normally moves through them. The UI is a function of `phase`, not
- * a fixed sequence of pages.
+ * Every screen the app can be in, across BOTH the one-player MVP
+ * flow (the default, primary experience) and the pass-the-phone
+ * group flow (preserved, but deliberately unreachable from the
+ * one-player entry point — see PlaySessionContext.tsx and
+ * gameSession.ts for how the phase graph stays closed). The UI is a
+ * function of `phase`, not a fixed sequence of pages.
+ *
+ * One-player path: scene-select -> character-select -> demo ->
+ * camera-permission -> acting -> score -> (camera-permission | scene-select).
+ *
+ * Group path (unrouted by the one-player entry point, not deleted):
+ * genre-select -> scene-select -> scene-intro -> script ->
+ * camera-permission -> acting -> score -> pass-phone -> (scene-intro | results) -> playback.
  */
 export type GamePhase =
   | 'genre-select'
   | 'scene-select'
+  | 'character-select'
+  | 'demo'
   | 'scene-intro'
   | 'script'
   | 'camera-permission'
@@ -166,6 +186,19 @@ export type GamePhase =
 export interface GameSession {
   id: string;
   createdAt: number;
+  /**
+   * Which top-level entry point this session came from — 'solo' (the
+   * default MVP flow: scene -> character -> demo -> ...) or 'group'
+   * (pass-the-phone: genre -> scene -> character -> scene-intro ->
+   * ...). Set once, at the true entry point (createSession defaults
+   * to 'solo'; SELECT_GENRE — only ever dispatched by the group
+   * flow's GenreSelectScreen — sets 'group'), and preserved across a
+   * RESET_FOR_NEW_SCENE within the same session so a mid-session
+   * "New Scene" in either flow still lands on the right next screen.
+   * This is the ONLY thing that decides that; nothing else infers
+   * flow from incidental fields like `selectedGenre`, which resets.
+   */
+  entryMode: 'solo' | 'group';
   selectedGenre?: Genre;
   sceneId?: string;
   playerCharacterId?: string;
